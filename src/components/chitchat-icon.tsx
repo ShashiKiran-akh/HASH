@@ -1,20 +1,65 @@
 
 import { cn } from "@/lib/utils";
+import { Eye, EyeOff } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-export function ChitChatIcon({ className }: { className?: string }) {
-    return (
-        <svg
-            className={cn("h-6 w-6", className)}
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M4 14.4V6.2C4 5.09543 4.89543 4.2 6 4.2H14.4C15.5046 4.2 16.4 5.09543 16.4 6.2V11.6C16.4 12.7046 15.5046 13.6 14.4 13.6H9.2L4 18.4V14.4Z" />
-            <path d="M8.2002 18.6V16.8C8.2002 15.6954 9.09563 14.8 10.2002 14.8H17.0002L21.2002 19.6V11C21.2002 9.89543 20.3048 9 19.2002 9H18.0002" />
-        </svg>
-    );
+const SentIcon = (props: any) => (
+  <motion.div 
+    {...props}
+    initial={{ opacity: 0, scale: 0.5 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.3 }}
+  >
+    <Eye className="h-full w-full" />
+  </motion.div>
+);
+
+const DeliveredIcon = (props: any) => (
+  <div {...props} className={cn("flex items-center -space-x-2", props.className)}>
+    <motion.div
+        initial={{ x: 5, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
+    >
+        <EyeOff className="h-full w-full" />
+    </motion.div>
+    <motion.div
+        initial={{ x: -5, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+    >
+        <EyeOff className="h-full w-full" />
+    </motion.div>
+  </div>
+);
+
+const SeenIcon = (props: any) => (
+  <div {...props} className={cn("flex items-center -space-x-2", props.className)}>
+     <motion.div 
+        initial={{ scale: 0.5, opacity: 0, x: 5 }} 
+        animate={{ scale: 1, opacity: 1, x: 0 }}
+        transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 15 }}
+     >
+        <Eye className="h-full w-full text-primary" />
+     </motion.div>
+     <motion.div 
+        initial={{ scale: 0.5, opacity: 0, x: -5 }}
+        animate={{ scale: 1, opacity: 1, x: 0 }}
+        transition={{ delay: 0, type: 'spring', stiffness: 300, damping: 15 }}
+     >
+        <Eye className="h-full w-full text-primary" />
+    </motion.div>
+  </div>
+);
+
+export function ChitChatIcon({ className, type = 'sent' }: { className?: string, type: 'sent' | 'delivered' | 'seen' }) {
+    const iconMap = {
+        sent: <SentIcon className={cn("h-6 w-6", className)} />,
+        delivered: <DeliveredIcon className={cn("h-6 w-6", className)} />,
+        seen: <SeenIcon className={cn("h-6 w-6", className)} />,
+    };
+
+    return iconMap[type] || null;
 }
+
+    

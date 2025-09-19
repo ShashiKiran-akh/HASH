@@ -1,216 +1,99 @@
 
 'use client';
 
-import { useState, useRef, useEffect, createContext, useContext } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
+  Share2,
+  MessageSquareHeart,
   Film,
-  BrainCircuit,
-  History,
-  Settings,
-  User,
   Clapperboard,
-  Compass,
-  Circle,
+  BrainCircuit,
+  Heart,
+  Hash,
+  Activity,
 } from 'lucide-react';
-import { Logo } from './logo';
-import { cn } from '@/lib/utils';
-import { ChitChatIcon } from './chitchat-icon';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-type SideNavContextType = {
-  isExpanded: boolean;
-  setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-const SideNavContext = createContext<SideNavContextType | undefined>(undefined);
-
-export const useSideNav = () => {
-    const context = useContext(SideNavContext);
-    if(context === undefined) {
-        throw new Error("useSideNav must be used within a SideNav provider");
-    }
-    return context;
-}
-
-export const SideNavProvider = ({ children }: { children: React.ReactNode }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-    return (
-        <SideNavContext.Provider value={{ isExpanded, setIsExpanded }}>
-            {children}
-        </SideNavContext.Provider>
-    );
-}
-
-const navItems = [
-  { href: '/circles', label: 'Circles', icon: Circle },
-  { href: '/chat', label: 'ChitChat', icon: ChitChatIcon },
+const topIcons = [
+  { href: '/circles', label: 'Circles', icon: Share2 },
+  { href: '/chat', label: 'ChitChat', icon: MessageSquareHeart },
   { href: '/clips', label: 'Clips', icon: Film },
-  { href: '/hashflicks', label: 'HASHFLICKS', icon: Clapperboard },
-  { href: '/home', label: 'Hastagger', icon: Logo, isCentral: true },
-  { href: '/memory-bank', label: 'Memory Bank', icon: BrainCircuit },
-  { href: '/instant-updates', label: 'Updates', icon: History },
-  { href: '/dynamic-feeds', label: 'Dynamic Feeds', icon: Compass },
 ];
 
-const bottomNavItems = [
-    { href: '/profile', label: 'Profile', icon: User },
-    { href: '/settings', label: 'Settings', icon: Settings },
+const bottomIcons = [
+  { href: '/hashflicks', label: 'HASHFLICKS', icon: Clapperboard },
+  { href: '/memory-bank', label: 'Memory Bank', icon: BrainCircuit },
+  { href: '/dynamic-feeds', label: 'Dynamic Feeds', icon: Activity },
 ]
-
-function useOnClickOutside(ref: React.RefObject<HTMLElement>, handler: (event: MouseEvent | TouchEvent) => void) {
-  useEffect(() => {
-    const listener = (event: MouseEvent | TouchEvent) => {
-      if (!ref.current || ref.current.contains(event.target as Node)) {
-        return;
-      }
-      handler(event);
-    };
-    document.addEventListener("mousedown", listener);
-    document.addEventListener("touchstart", listener);
-    return () => {
-      document.removeEventListener("mousedown", listener);
-      document.removeEventListener("touchstart", listener);
-    };
-  }, [ref, handler]);
-}
-
 
 export default function SideNav() {
   const pathname = usePathname();
-  const { isExpanded, setIsExpanded } = useSideNav();
-  const [hoveredPath, setHoveredPath] = useState<string | null>(null);
-  
-  const navRef = useRef<HTMLElement>(null);
-  const itemsRef = useRef<(HTMLAnchorElement | null)[]>([]);
+  const [isHovered, setIsHovered] = useState(false);
 
-  useOnClickOutside(navRef, () => setIsExpanded(false));
-
-  const allItems = [...navItems, ...bottomNavItems];
-  const activeIndex = allItems.findIndex(item => pathname.startsWith(item.href));
-  const activeItem = allItems[activeIndex];
-
-  const getHighlightStyle = () => {
-    if (!activeItem || activeIndex < 0 || !navRef.current || !itemsRef.current[activeIndex]) return {};
-
-    const navRect = navRef.current.getBoundingClientRect();
-    const itemRect = itemsRef.current[activeIndex]!.getBoundingClientRect();
-
-    const top = itemRect.top - navRect.top;
-    const height = itemRect.height;
-    
-    let path;
-    const navWidth = isExpanded ? 180 : 80;
-
-    if (isExpanded) {
-        path = `M${navWidth - 2},${top - 20} 
-                C${navWidth - 15},${top + (height * 0.4)}, ${navWidth - 15},${top + height - (height * 0.4)}, ${navWidth - 2},${top + height + 20}
-                `;
-    } else {
-         path = `M${navWidth - 2},${top} Q${navWidth - 20},${top + height/2} ${navWidth - 2},${top + height}`
-    }
-
-    return { top, path, };
-  };
-
-  const { path: highlightPath } = getHighlightStyle();
-  
-  const labelVariants = {
-    hidden: { opacity: 0, x: -10 },
-    visible: { 
-        opacity: 1,
-        x: 0,
-        transition: { type: 'spring', stiffness: 260, damping: 20 }
-    },
-  };
-
-  const renderNavItem = (item: any, index: number, isBottom: boolean) => {
-    const isActive = activeIndex === (isBottom ? navItems.length + index : index);
-    const isHovered = hoveredPath === item.href;
-    const fullIndex = isBottom ? navItems.length + index : index;
-
+  const NavItem = ({ item, isActive }: { item: typeof topIcons[0], isActive: boolean }) => {
     return (
-        <Link
-          key={item.href}
-          href={item.href}
-          ref={(el) => (itemsRef.current[fullIndex] = el)}
-          onMouseEnter={() => setHoveredPath(item.href)}
-          onClick={() => setIsExpanded(true)}
-          className={cn(
-            "relative flex items-center group py-2 w-full",
-            isExpanded ? "justify-start px-4 gap-1" : "justify-center"
-          )}
-        >
-          <motion.div
-              className={cn(
-              'flex items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 group-hover:text-primary z-10',
-              isActive && 'text-primary',
-              item.isCentral ? 'w-14 h-14' : 'w-12 h-12'
-              )}
-              animate={{ scale: isActive || isHovered ? 1.1 : 1 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 10 }}
-          >
-              <item.icon className={cn(item.isCentral ? 'h-12 w-12' : 'h-6 w-6')} />
-          </motion.div>
-          <AnimatePresence>
-            { isExpanded ? (
-               <motion.span
-                    variants={labelVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                    className="text-sm font-bold whitespace-nowrap text-accent-foreground"
-                >
-                    {item.label}
-                </motion.span>
-            ) : isHovered ? (
-              <motion.div
-                key={item.href}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                className={cn(
-                  "absolute left-1/2 -translate-x-1/2 top-full mt-2 text-sm font-bold whitespace-nowrap bg-accent text-accent-foreground px-2 py-1 rounded-md"
+        <Link href={item.href}>
+            <div
+                className={`flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 cursor-pointer w-full
+                ${isActive
+                    ? "bg-white/90 text-primary shadow-lg"
+                    : "text-sidebar-foreground hover:bg-white/20 hover:text-white"
+                }`}
+            >
+                <item.icon className="h-6 w-6 shrink-0" />
+                <AnimatePresence>
+                {isHovered && (
+                    <motion.span 
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.2, delay: 0.1 }}
+                        className="whitespace-nowrap font-semibold"
+                    >
+                        {item.label}
+                    </motion.span>
                 )}
-              >
-                {item.label}
-              </motion.div>
-            ) : null }
-          </AnimatePresence>
-        </Link>
+                </AnimatePresence>
+            </div>
+      </Link>
     );
-  }
+  };
 
   return (
-        <motion.nav
-          ref={navRef}
-          onMouseLeave={() => setHoveredPath(null)}
-          className="fixed top-0 left-0 h-full bg-background/80 backdrop-blur-sm border-r flex flex-col items-center py-6 gap-2 z-50"
-          initial={false}
-          animate={{ width: isExpanded ? 180 : 80 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        >
-          <svg className="absolute top-0 left-0 w-full h-full pointer-events-none" style={{ zIndex: -1 }}>
-              <motion.path
-              d={highlightPath}
-              fill="transparent"
-              stroke="hsl(var(--primary))"
-              strokeWidth="2.5"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: activeIndex >= 0 ? 1 : 0, d: highlightPath }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              />
-          </svg>
+    <motion.div 
+        className="fixed top-0 left-0 h-full bg-gradient-to-b from-sidebar-grad-start to-sidebar-grad-end flex flex-col items-center py-8 z-50 rounded-r-2xl shadow-2xl"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        initial={{ width: 80 }}
+        animate={{ width: isHovered ? 208 : 80 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+    >
+        <div className="flex flex-col justify-between h-full w-full px-2">
+            {/* Icons top */}
+            <div className="flex flex-col gap-4 items-center">
+              {topIcons.map((item) => (
+                <NavItem key={item.href} item={item} isActive={pathname.startsWith(item.href)} />
+              ))}
+            </div>
 
-          <div className="flex flex-col items-center gap-2">
-              {navItems.map((item, index) => renderNavItem(item, index, false))}
-          </div>
+            {/* Center Hashtag Icon */}
+            <Link href="/home">
+                <div className="w-16 h-16 rounded-full bg-sidebar-grad-end border-4 border-yellow-300 flex items-center justify-center text-3xl text-white shadow-xl transition-transform hover:scale-105 cursor-pointer">
+                  <Hash />
+                </div>
+            </Link>
 
-          <div className="mt-auto flex flex-col items-center gap-2">
-              {bottomNavItems.map((item, index) => renderNavItem(item, index, true))}
-          </div>
-        </motion.nav>
+            {/* Icons bottom */}
+            <div className="flex flex-col gap-4 items-center">
+              {bottomIcons.map((item) => (
+                <NavItem key={item.href} item={item} isActive={pathname.startsWith(item.href)} />
+              ))}
+            </div>
+        </div>
+      </motion.div>
   );
 }
+
+    

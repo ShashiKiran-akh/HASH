@@ -88,6 +88,42 @@ const itemVariants = {
 export default function HomePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+        <style jsx global>{`
+            .fireworks {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 1px;
+              height: 1px;
+            }
+            .checked-like-fx {
+              position: absolute;
+              width: 10px;
+              height: 10px;
+              border-radius: 50%;
+              box-shadow: 0 0 hsl(var(--primary)), 0 0 hsl(var(--primary)), 0 0 hsl(var(--primary)), 0 0 hsl(var(--primary));
+              animation:
+                fireworks-bang 1s ease-out forwards,
+                fireworks-gravity 1s ease-in forwards;
+              top: 0;
+              left: 0;
+            }
+
+            @keyframes fireworks-bang {
+              to {
+                box-shadow:
+                  114px -107px hsl(var(--accent)),
+                  197px -6px hsl(var(--primary)),
+                  -167px -262px hsl(var(--accent)),
+                  81px 42px hsl(var(--primary)),
+                  -60px -183px hsl(var(--accent));
+              }
+            }
+            @keyframes fireworks-gravity {
+              to { transform: translateY(200px); opacity: 0; }
+            }
+        `}</style>
       <motion.h1 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}

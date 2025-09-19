@@ -3,54 +3,38 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Flame, MessageCircle, Send, MoreVertical, Upload, Flag, ThumbsUp, ThumbsDown, Wand2 } from 'lucide-react';
+import { MoreVertical, Upload, Flag, ThumbsUp, ThumbsDown, Wand2, Forward } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { VibeButton } from '@/components/vibe-button';
+import { CirculateButton } from '@/components/circulate-button';
+import { ExpressButton } from '@/components/express-button';
 
 const clips = [
-  { id: 1, src: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", user: "bunny_lover", description: "Big Buck Bunny adventures!" },
-  { id: 2, src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", user: "dreamer", description: "Elephants have dreams too." },
-  { id: 3, src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", user: "firestarter", description: "Just chilling by the fire." },
-  { id: 4, src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", user: "escape_artist", description: "My great escape" },
-  { id: 5, src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", user: "fun_times", description: "Living my best life!" },
-  { id: 6, src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", user: "joy_rider", description: "Cruising into the weekend." },
-  { id: 7, src: "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", user: "sintel_fan", description: "The journey begins." },
+  { id: 1, src: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", user: "bunny_lover", description: "Big Buck Bunny adventures!", vibes: 128, expresses: 42, circulates: 18 },
+  { id: 2, src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", user: "dreamer", description: "Elephants have dreams too.", vibes: 256, expresses: 89, circulates: 23 },
+  { id: 3, src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", user: "firestarter", description: "Just chilling by the fire.", vibes: 512, expresses: 120, circulates: 45 },
+  { id: 4, src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", user: "escape_artist", description: "My great escape", vibes: 1024, expresses: 340, circulates: 99 },
+  { id: 5, src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", user: "fun_times", description: "Living my best life!", vibes: 2048, expresses: 560, circulates: 150 },
 ];
-
-const bubbleVariants = {
-  hidden: { opacity: 0, scale: 0 },
-  visible: (i: number) => ({
-    opacity: 1,
-    scale: 1,
-    transition: {
-      delay: i * 0.1,
-      type: 'spring',
-      stiffness: 150,
-      damping: 10,
-    },
-  }),
-  exit: {
-    opacity: 0,
-    scale: 0,
-    transition: { duration: 0.3 }
-  }
-};
 
 export default function ClipsPage() {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [showLikeAnimation, setShowLikeAnimation] = useState<number | null>(null);
     const [handsFreeLoops, setHandsFreeLoops] = useState<string>('default'); // 'default', '1' to '6'
+    const [playbackRate, setPlaybackRate] = useState('1');
     const [currentClip, setCurrentClip] = useState<number>(0);
     const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
     useEffect(() => {
         videoRefs.current = videoRefs.current.slice(0, clips.length);
     }, []);
-
-    const handleLike = (id: number) => {
-        setShowLikeAnimation(id);
-        setTimeout(() => setShowLikeAnimation(null), 1200);
-    };
+    
+    useEffect(() => {
+        const currentVideo = videoRefs.current[currentClip];
+        if (currentVideo) {
+            currentVideo.playbackRate = parseFloat(playbackRate);
+        }
+    }, [playbackRate, currentClip]);
 
     const handleScrollToNext = (index: number) => {
         const nextIndex = (index + 1) % clips.length;
@@ -93,6 +77,7 @@ export default function ClipsPage() {
                     const index = videoRefs.current.indexOf(video);
                     
                     if (entry.isIntersecting) {
+                        video.playbackRate = parseFloat(playbackRate);
                         video.play().catch(e => console.error("Autoplay failed", e));
                         setCurrentClip(index);
                         const cleanup = setupAutoScroll(video, index);
@@ -118,7 +103,7 @@ export default function ClipsPage() {
                 if (video) observer.unobserve(video);
             });
         };
-    }, [handsFreeLoops]);
+    }, [handsFreeLoops, playbackRate]);
     
 
     return (
@@ -140,26 +125,6 @@ export default function ClipsPage() {
                         <video ref={el => videoRefs.current[index] = el} loop={handsFreeLoops === "0"} muted playsInline className="h-full w-full object-cover">
                             <source src={clip.src} type="video/mp4" />
                         </video>
-                         <AnimatePresence>
-                          {showLikeAnimation === clip.id && (
-                            <motion.div
-                              initial="hidden"
-                              animate="visible"
-                              exit="exit"
-                              className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                            >
-                                <motion.div custom={0} variants={bubbleVariants} className="absolute">
-                                    <Flame className="h-32 w-32 text-red-500/80" fill="currentColor" />
-                                </motion.div>
-                                <motion.div custom={1} variants={bubbleVariants} className="absolute" style={{ top: '30%', left: '25%', transform: 'rotate(-20deg)' }}>
-                                    <Flame className="h-16 w-16 text-orange-400/80" fill="currentColor" />
-                                </motion.div>
-                                <motion.div custom={2} variants={bubbleVariants} className="absolute" style={{ bottom: '30%', right: '25%', transform: 'rotate(20deg)' }}>
-                                    <Flame className="h-20 w-20 text-yellow-400/80" fill="currentColor" />
-                                </motion.div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
                         <div className="absolute top-4 right-4 z-10">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -186,6 +151,22 @@ export default function ClipsPage() {
                                             </DropdownMenuRadioGroup>
                                         </DropdownMenuSubContent>
                                     </DropdownMenuSub>
+                                    <DropdownMenuSub>
+                                        <DropdownMenuSubTrigger>
+                                            <Forward className="mr-2 h-4 w-4" />
+                                            Pace
+                                        </DropdownMenuSubTrigger>
+                                        <DropdownMenuSubContent>
+                                            <DropdownMenuRadioGroup value={playbackRate} onValueChange={setPlaybackRate}>
+                                                <DropdownMenuRadioItem value="2">2x</DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="1.5">1.5x</DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="1">Normal</DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="0.75">0.75x</DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="0.5">0.5x</DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="0.25">0.25x</DropdownMenuRadioItem>
+                                            </DropdownMenuRadioGroup>
+                                        </DropdownMenuSubContent>
+                                    </DropdownMenuSub>
                                     <DropdownMenuItem><Flag className="mr-2"/>Report</DropdownMenuItem>
                                     <DropdownMenuItem><ThumbsUp className="mr-2"/>Interested</DropdownMenuItem>
                                     <DropdownMenuItem><ThumbsDown className="mr-2"/>Not Interested</DropdownMenuItem>
@@ -196,19 +177,19 @@ export default function ClipsPage() {
                             <div className="font-bold">@{clip.user}</div>
                             <p className="text-sm">{clip.description}</p>
                         </div>
-                        <div className="absolute bottom-4 right-4 flex flex-col gap-4">
-                            <Button variant="ghost" size="icon" className="text-white hover:text-red-500 rounded-full bg-black/30 hover:bg-black/50" onClick={() => handleLike(clip.id)}>
-                                <Flame className="h-7 w-7" />
-                                <span className="sr-only">Lit</span>
-                            </Button>
-                            <Button variant="ghost" size="icon" className="text-white hover:text-blue-400 rounded-full bg-black/30 hover:bg-black/50">
-                                <MessageCircle className="h-7 w-7" />
-                                <span className="sr-only">Express</span>
-                            </Button>
-                            <Button variant="ghost" size="icon" className="text-white hover:text-green-400 rounded-full bg-black/30 hover:bg-black/50">
-                                <Send className="h-7 w-7" />
-                                <span className="sr-only">Circulate</span>
-                            </Button>
+                        <div className="absolute bottom-4 right-4 flex flex-col items-center gap-4">
+                           <div className="flex flex-col items-center gap-1 text-white">
+                                <VibeButton />
+                                <span className="text-xs font-bold">{clip.vibes}</span>
+                           </div>
+                            <div className="flex flex-col items-center gap-1 text-white">
+                                <ExpressButton docId={clip.id.toString()} mode="overlay" />
+                                <span className="text-xs font-bold">{clip.expresses}</span>
+                            </div>
+                           <div className="flex flex-col items-center gap-1 text-white">
+                                <CirculateButton />
+                                <span className="text-xs font-bold">{clip.circulates}</span>
+                           </div>
                         </div>
                     </div>
                 ))}
